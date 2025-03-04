@@ -1,0 +1,20 @@
+name: ci
+
+on:
+  push:
+
+jobs:
+  check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v16
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Run checks
+        run: nix flake check -L
