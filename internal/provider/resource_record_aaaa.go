@@ -186,8 +186,8 @@ func (resource *recordAAAAResource) Update(context context.Context, request reso
 		return
 	}
 
-	if !destination.Is4() {
-		response.Diagnostics.AddError("Error creating AAAA record", "Destination address must be IPV4")
+	if !destination.Is6() {
+		response.Diagnostics.AddError("Error creating AAAA record", "Destination address must be IPV6")
 		return
 	}
 
