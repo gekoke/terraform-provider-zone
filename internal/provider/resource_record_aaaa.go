@@ -94,10 +94,7 @@ func (*recordAAAAResource) ImportState(context context.Context, request resource
 func (resource *recordAAAAResource) Create(context context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var plan recordAAAAResourceModel
 
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	if !getCreatePlan(context, request, response, plan) {
 		return
 	}
 
@@ -132,7 +129,7 @@ func (resource *recordAAAAResource) Create(context context.Context, request reso
 	plan.Modify = types.BoolValue(recordInfo.Modify)
 	plan.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, plan)
 	response.Diagnostics.Append(diagnostics...)
 }
 
@@ -170,9 +167,11 @@ func (resource *recordAAAAResource) Update(context context.Context, request reso
 	var plan recordAAAAResourceModel
 	var state recordAAAAResourceModel
 
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-	diagnostics = request.State.Get(context, &state)
+	if !getUpdatePlan(context, request, response, &plan) {
+		return
+	}
+
+	diagnostics := request.State.Get(context, &state)
 	response.Diagnostics.Append(diagnostics...)
 
 	if response.Diagnostics.HasError() {
