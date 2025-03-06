@@ -9,7 +9,6 @@
       ...
     }:
     {
-
       _module.args.pkgs = import inputs.nixpkgs {
         inherit system;
         config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "terraform" ];
@@ -19,7 +18,7 @@
         default = pkgs.mkShellNoCC {
           name = "terraform-provider-zone-shell";
 
-          nativeBuildInputs = [
+          packages = [
             pkgs.terraform
             pkgs.opentofu
           ];
