@@ -92,53 +92,46 @@ func (*recordAAAAResource) ImportState(context context.Context, request resource
 }
 
 func (resource *recordAAAAResource) Create(context context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var plan recordAAAAResourceModel
-
-	if !getCreatePlan(context, request, response, plan) {
+	plan, err := getCreatePlan[recordAAAAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	destination, err := netip.ParseAddr(plan.Destination.ValueString())
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating AAAA record", "Error parsing address from destination: "+err.Error())
 		return
 	}
-
 	if !destination.Is6() {
 		response.Diagnostics.AddError("Error creating AAAA record", "Destination must be an IPV6 address")
 		return
 	}
-
 	domain := plan.Domain.ValueString()
 	name := plan.Name.ValueString()
 	record := api.AAAARecord{Name: name, Destination: destination}
 
 	recordInfo, err := resource.client.CreateAAAARecord(domain, record)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating AAAA record", "Request failed: "+err.Error())
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	var state recordAAAAResourceModel
+	state.ID = types.StringValue(recordInfo.ID)
+	state.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	state.Name = types.StringValue(recordInfo.Name)
+	state.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
+	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	state.Modify = types.BoolValue(recordInfo.Modify)
+	state.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics := response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, state)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordAAAAResource) Read(context context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var state recordAAAAResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getReadState[recordAAAAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
@@ -146,7 +139,6 @@ func (resource *recordAAAAResource) Read(context context.Context, request resour
 	id := api.Identificator(state.ID.ValueString())
 
 	recordInfo, err := resource.client.GetAAAARecord(domain, id)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error reading AAAA record", "Request failed: "+err.Error())
 		return
@@ -159,37 +151,29 @@ func (resource *recordAAAAResource) Read(context context.Context, request resour
 	state.Modify = types.BoolValue(recordInfo.Modify)
 	state.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, &state)
+	diagnostics := response.State.Set(context, state)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordAAAAResource) Update(context context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan recordAAAAResourceModel
-	var state recordAAAAResourceModel
-
-	if !getUpdatePlan(context, request, response, &plan) {
+	plan, err := getUpdatePlan[recordAAAAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
-
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getUpdateState[recordAAAAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	destination, err := netip.ParseAddr(plan.Destination.ValueString())
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating AAAA record", "Error parsing destination address: "+err.Error())
 		return
 	}
-
 	if !destination.Is6() {
 		response.Diagnostics.AddError("Error creating AAAA record", "Destination address must be IPV6")
 		return
 	}
-
 	domain := plan.Domain.ValueString()
 	name := plan.Name.ValueString()
 	recordID := state.ID.ValueString()
@@ -201,32 +185,28 @@ func (resource *recordAAAAResource) Update(context context.Context, request reso
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	state.ID = types.StringValue(recordInfo.ID)
+	state.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	state.Name = types.StringValue(recordInfo.Name)
+	state.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
+	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	state.Modify = types.BoolValue(recordInfo.Modify)
+	state.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, state)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordAAAAResource) Delete(context context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var state recordAAAAResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getDeleteState[recordAAAAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	domain := state.Domain.ValueString()
 	id := state.ID.ValueString()
 
-	err := resource.client.DeleteAAAARecord(domain, id)
-
+	err = resource.client.DeleteAAAARecord(domain, id)
 	if err != nil {
 		response.Diagnostics.AddError("Error deleting AAAA record", "Request failed: "+err.Error())
 	}

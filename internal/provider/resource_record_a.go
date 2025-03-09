@@ -92,56 +92,46 @@ func (*recordAResource) ImportState(context context.Context, request resource.Im
 }
 
 func (resource *recordAResource) Create(context context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var plan recordAResourceModel
-
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	plan, err := getCreatePlan[recordAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	destination, err := netip.ParseAddr(plan.Destination.ValueString())
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating A record", "Error parsing address from destination: "+err.Error())
 		return
 	}
-
 	if !destination.Is4() {
 		response.Diagnostics.AddError("Error creating A record", "Destination must be an IPV4 address")
 		return
 	}
-
 	domain := plan.Domain.ValueString()
 	name := plan.Name.ValueString()
 	record := api.ARecord{Name: name, Destination: destination}
 
 	recordInfo, err := resource.client.CreateARecord(domain, record)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating A record", "Request failed: "+err.Error())
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination.String())
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	var state recordAResourceModel
+	state.ID = types.StringValue(recordInfo.ID)
+	state.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	state.Name = types.StringValue(recordInfo.Name)
+	state.Destination = types.StringValue(recordInfo.Destination.String())
+	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	state.Modify = types.BoolValue(recordInfo.Modify)
+	state.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, state)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordAResource) Read(context context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var state recordAResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getReadState[recordAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
@@ -149,7 +139,6 @@ func (resource *recordAResource) Read(context context.Context, request resource.
 	id := api.Identificator(state.ID.ValueString())
 
 	recordInfo, err := resource.client.GetARecord(domain, id)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error reading A record", "Request failed: "+err.Error())
 		return
@@ -162,35 +151,29 @@ func (resource *recordAResource) Read(context context.Context, request resource.
 	state.Modify = types.BoolValue(recordInfo.Modify)
 	state.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, &state)
+	diagnostics := response.State.Set(context, state)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordAResource) Update(context context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan recordAResourceModel
-	var state recordAResourceModel
-
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-	diagnostics = request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	plan, err := getUpdatePlan[recordAResourceModel](context, request, response)
+	if err != nil {
+		return
+	}
+	state, err := getUpdateState[recordAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	destination, err := netip.ParseAddr(plan.Destination.ValueString())
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating A record", "Error parsing destination address: "+err.Error())
 		return
 	}
-
 	if !destination.Is4() {
 		response.Diagnostics.AddError("Error creating A record", "Destination address must be IPV4")
 		return
 	}
-
 	domain := plan.Domain.ValueString()
 	name := plan.Name.ValueString()
 	recordID := state.ID.ValueString()
@@ -202,15 +185,15 @@ func (resource *recordAResource) Update(context context.Context, request resourc
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination.String())
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	state.ID = types.StringValue(recordInfo.ID)
+	state.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	state.Name = types.StringValue(recordInfo.Name)
+	state.Destination = types.StringValue(recordInfo.Destination.String())
+	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	state.Modify = types.BoolValue(recordInfo.Modify)
+	state.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, state)
 	response.Diagnostics.Append(diagnostics...)
 }
 
