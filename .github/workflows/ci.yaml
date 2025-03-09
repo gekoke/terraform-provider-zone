@@ -4,17 +4,47 @@ on:
   push:
 
 jobs:
-  check:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v16
+        uses: cachix/install-nix-action@v30
+        with:
+          # Avoid rate limits
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up binary cache
+        uses: cachix/cachix-action@v15
+        with:
+          name: terraform-provider-zone
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
 
-      - name: Run checks
-        run: nix flake check -L
+      - name: Build
+        run: nix build "#terraform-provider-zone" -L
+  check:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          # Avoid rate limits
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up binary cache
+        uses: cachix/cachix-action@v15
+        with:
+          name: terraform-provider-zone
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Build
+        run: nix build "#checks.x86_64-linux.ci" -L
