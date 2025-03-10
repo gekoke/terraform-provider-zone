@@ -97,52 +97,43 @@ func (recordMXResource) ImportState(context context.Context, request resource.Im
 }
 
 func (resource *recordMXResource) Create(context context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var plan recordMXResourceModel
-
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	plan, err := getCreatePlan[recordMXResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	priority := plan.Priority.ValueInt32()
-
 	if !validateMXPriority(&response.Diagnostics, priority) {
 		return
 	}
-
 	destination := plan.Destination.ValueString()
 	domain := plan.Domain.ValueString()
 	name := plan.Name.ValueString()
 	record := api.MXRecord{Name: name, Destination: destination, Priority: uint16(priority)}
 
 	recordInfo, err := resource.client.CreateMXRecord(domain, record)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating MX record", "Request failed: "+err.Error())
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination)
-	plan.Priority = types.Int32Value(int32(recordInfo.Priority))
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordMXResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination)
+	newState.Priority = types.Int32Value(int32(recordInfo.Priority))
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordMXResource) Read(context context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var state recordMXResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getReadState[recordMXResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
@@ -150,43 +141,38 @@ func (resource *recordMXResource) Read(context context.Context, request resource
 	id := api.Identificator(state.ID.ValueString())
 
 	mxRecord, err := resource.client.GetMXRecord(domain, id)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error reading MX record", "Request failed: "+err.Error())
 		return
 	}
 
-	state.ID = types.StringValue(mxRecord.ID)
-	state.Name = types.StringValue(mxRecord.Name)
-	state.Destination = types.StringValue(mxRecord.Destination)
-	state.Priority = types.Int32Value(int32(mxRecord.Priority))
-	state.ResourceURL = types.StringValue(mxRecord.ResourceURL.String())
-	state.Modify = types.BoolValue(mxRecord.Modify)
-	state.Delete = types.BoolValue(mxRecord.Delete)
+	var newState recordMXResourceModel
+	newState.ID = types.StringValue(mxRecord.ID)
+	newState.Name = types.StringValue(mxRecord.Name)
+	newState.Destination = types.StringValue(mxRecord.Destination)
+	newState.Priority = types.Int32Value(int32(mxRecord.Priority))
+	newState.ResourceURL = types.StringValue(mxRecord.ResourceURL.String())
+	newState.Modify = types.BoolValue(mxRecord.Modify)
+	newState.Delete = types.BoolValue(mxRecord.Delete)
 
-	diagnostics = response.State.Set(context, &state)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordMXResource) Update(context context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan recordMXResourceModel
-	var state recordMXResourceModel
-
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-	diagnostics = request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	plan, err := getUpdatePlan[recordMXResourceModel](context, request, response)
+	if err != nil {
+		return
+	}
+	state, err := getUpdateState[recordMXResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	priority := plan.Priority.ValueInt32()
-
 	if !validateMXPriority(&response.Diagnostics, priority) {
 		return
 	}
-
 	name := plan.Name.ValueString()
 	destination := plan.Destination.ValueString()
 	domain := plan.Domain.ValueString()
@@ -199,33 +185,30 @@ func (resource *recordMXResource) Update(context context.Context, request resour
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination)
-	plan.Priority = types.Int32Value(int32(record.Priority))
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordMXResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination)
+	newState.Priority = types.Int32Value(int32(record.Priority))
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordMXResource) Delete(context context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var state recordMXResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getDeleteState[recordMXResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	domain := state.Domain.ValueString()
 	id := state.ID.ValueString()
 
-	err := resource.client.DeleteMXRecord(domain, id)
-
+	err = resource.client.DeleteMXRecord(domain, id)
 	if err != nil {
 		response.Diagnostics.AddError("Error deleting MX record", "Request failed: "+err.Error())
 	}

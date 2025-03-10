@@ -9,7 +9,7 @@ import (
 
 func getCreatePlan[T any](context context.Context, request resource.CreateRequest, response *resource.CreateResponse) (T, error) {
 	var target T
-	diagnostics := request.Plan.Get(context, target)
+	diagnostics := request.Plan.Get(context, &target)
 	response.Diagnostics.Append(diagnostics...)
 
 	if response.Diagnostics.HasError() {
@@ -20,7 +20,7 @@ func getCreatePlan[T any](context context.Context, request resource.CreateReques
 
 func getReadState[T any](context context.Context, request resource.ReadRequest, response *resource.ReadResponse) (T, error) {
 	var target T
-	diagnostics := request.State.Get(context, target)
+	diagnostics := request.State.Get(context, &target)
 	response.Diagnostics.Append(diagnostics...)
 
 	if response.Diagnostics.HasError() {
@@ -31,7 +31,7 @@ func getReadState[T any](context context.Context, request resource.ReadRequest, 
 
 func getUpdatePlan[T any](context context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) (T, error) {
 	var target T
-	diagnostics := request.Plan.Get(context, target)
+	diagnostics := request.Plan.Get(context, &target)
 	response.Diagnostics.Append(diagnostics...)
 
 	if response.Diagnostics.HasError() {
@@ -42,7 +42,7 @@ func getUpdatePlan[T any](context context.Context, request resource.UpdateReques
 
 func getUpdateState[T any](context context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) (T, error) {
 	var target T
-	diagnostics := request.State.Get(context, target)
+	diagnostics := request.State.Get(context, &target)
 	response.Diagnostics.Append(diagnostics...)
 
 	if response.Diagnostics.HasError() {
@@ -53,7 +53,7 @@ func getUpdateState[T any](context context.Context, request resource.UpdateReque
 
 func getDeleteState[T any](context context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) (T, error) {
 	var target T
-	diagnostics := request.State.Get(context, target)
+	diagnostics := request.State.Get(context, &target)
 	response.Diagnostics.Append(diagnostics...)
 
 	if response.Diagnostics.HasError() {

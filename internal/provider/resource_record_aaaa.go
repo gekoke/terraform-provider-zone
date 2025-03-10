@@ -116,16 +116,16 @@ func (resource *recordAAAAResource) Create(context context.Context, request reso
 		return
 	}
 
-	var state recordAAAAResourceModel
-	state.ID = types.StringValue(recordInfo.ID)
-	state.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	state.Name = types.StringValue(recordInfo.Name)
-	state.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
-	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	state.Modify = types.BoolValue(recordInfo.Modify)
-	state.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordAAAAResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics := response.State.Set(context, state)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
@@ -144,14 +144,15 @@ func (resource *recordAAAAResource) Read(context context.Context, request resour
 		return
 	}
 
-	state.ID = types.StringValue(recordInfo.ID)
-	state.Name = types.StringValue(recordInfo.Name)
-	state.Destination = types.StringValue(recordInfo.Destination.String())
-	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	state.Modify = types.BoolValue(recordInfo.Modify)
-	state.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordAAAAResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination.String())
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics := response.State.Set(context, state)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
@@ -185,15 +186,16 @@ func (resource *recordAAAAResource) Update(context context.Context, request reso
 		return
 	}
 
-	state.ID = types.StringValue(recordInfo.ID)
-	state.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	state.Name = types.StringValue(recordInfo.Name)
-	state.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
-	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	state.Modify = types.BoolValue(recordInfo.Modify)
-	state.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordAAAAResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics := response.State.Set(context, state)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 

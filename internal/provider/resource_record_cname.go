@@ -91,12 +91,8 @@ func (recordCNAMEResource) ImportState(context context.Context, request resource
 }
 
 func (resource *recordCNAMEResource) Create(context context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var plan recordCNAMEResourceModel
-
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	plan, err := getCreatePlan[recordCNAMEResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
@@ -112,24 +108,22 @@ func (resource *recordCNAMEResource) Create(context context.Context, request res
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination)
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordCNAMEResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination)
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordCNAMEResource) Read(context context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var state recordCNAMEResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getReadState[recordCNAMEResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
@@ -143,27 +137,25 @@ func (resource *recordCNAMEResource) Read(context context.Context, request resou
 		return
 	}
 
-	state.ID = types.StringValue(cnameRecord.ID)
-	state.Name = types.StringValue(cnameRecord.Name)
-	state.Destination = types.StringValue(cnameRecord.Destination)
-	state.ResourceURL = types.StringValue(cnameRecord.ResourceURL.String())
-	state.Modify = types.BoolValue(cnameRecord.Modify)
-	state.Delete = types.BoolValue(cnameRecord.Delete)
+	newState := recordCNAMEResourceModel{}
+	newState.ID = types.StringValue(cnameRecord.ID)
+	newState.Name = types.StringValue(cnameRecord.Name)
+	newState.Destination = types.StringValue(cnameRecord.Destination)
+	newState.ResourceURL = types.StringValue(cnameRecord.ResourceURL.String())
+	newState.Modify = types.BoolValue(cnameRecord.Modify)
+	newState.Delete = types.BoolValue(cnameRecord.Delete)
 
-	diagnostics = response.State.Set(context, &state)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordCNAMEResource) Update(context context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan recordCNAMEResourceModel
-	var state recordCNAMEResourceModel
-
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-	diagnostics = request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	plan, err := getUpdatePlan[recordCNAMEResourceModel](context, request, response)
+	if err != nil {
+		return
+	}
+	state, err := getUpdateState[recordCNAMEResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
@@ -178,32 +170,29 @@ func (resource *recordCNAMEResource) Update(context context.Context, request res
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination)
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordCNAMEResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination)
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordCNAMEResource) Delete(context context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var state recordCNAMEResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getDeleteState[recordCNAMEResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	domain := state.Domain.ValueString()
 	id := state.ID.ValueString()
 
-	err := resource.client.DeleteCNAMERecord(domain, id)
-
+	err = resource.client.DeleteCNAMERecord(domain, id)
 	if err != nil {
 		response.Diagnostics.AddError("Error deleting CNAME record", "Request failed: "+err.Error())
 	}

@@ -97,52 +97,43 @@ func (*recordURLResource) ImportState(context context.Context, request resource.
 }
 
 func (resource *recordURLResource) Create(context context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var plan recordURLResourceModel
-
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	plan, err := getCreatePlan[recordURLResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	type_ := plan.Type.ValueString()
-
 	if !validateType(&response.Diagnostics, type_) {
 		return
 	}
-
 	domain := plan.Domain.ValueString()
 	name := plan.Name.ValueString()
 	destination := plan.Destination.ValueString()
 	record := api.URLRecord{Name: name, Destination: destination, Type: type_}
 
 	recordInfo, err := resource.client.CreateURLRecord(domain, record)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating URL record", "Request failed: "+err.Error())
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination)
-	plan.Type = types.StringValue(recordInfo.Type)
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordURLResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination)
+	newState.Type = types.StringValue(recordInfo.Type)
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordURLResource) Read(context context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var state recordURLResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getReadState[recordURLResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
@@ -150,43 +141,38 @@ func (resource *recordURLResource) Read(context context.Context, request resourc
 	id := api.Identificator(state.ID.ValueString())
 
 	recordInfo, err := resource.client.GetURLRecord(domain, id)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error reading URL record", "Request failed: "+err.Error())
 		return
 	}
 
-	state.ID = types.StringValue(recordInfo.ID)
-	state.Name = types.StringValue(recordInfo.Name)
-	state.Destination = types.StringValue(recordInfo.Destination)
-	state.Type = types.StringValue(recordInfo.Type)
-	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	state.Modify = types.BoolValue(recordInfo.Modify)
-	state.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordURLResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination)
+	newState.Type = types.StringValue(recordInfo.Type)
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, &state)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordURLResource) Update(context context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan recordURLResourceModel
-	var state recordURLResourceModel
-
-	diagnostics := request.Plan.Get(context, &plan)
-	response.Diagnostics.Append(diagnostics...)
-	diagnostics = request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	plan, err := getUpdatePlan[recordURLResourceModel](context, request, response)
+	if err != nil {
+		return
+	}
+	state, err := getUpdateState[recordURLResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	type_ := plan.Type.ValueString()
-
 	if !validateType(&response.Diagnostics, type_) {
 		return
 	}
-
 	domain := plan.Domain.ValueString()
 	name := plan.Name.ValueString()
 	destination := plan.Destination.ValueString()
@@ -199,33 +185,30 @@ func (resource *recordURLResource) Update(context context.Context, request resou
 		return
 	}
 
-	plan.ID = types.StringValue(recordInfo.ID)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	plan.Name = types.StringValue(recordInfo.Name)
-	plan.Destination = types.StringValue(recordInfo.Destination)
-	plan.Type = types.StringValue(recordInfo.Type)
-	plan.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	plan.Modify = types.BoolValue(recordInfo.Modify)
-	plan.Delete = types.BoolValue(recordInfo.Delete)
+	var newState recordURLResourceModel
+	newState.ID = types.StringValue(recordInfo.ID)
+	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Name = types.StringValue(recordInfo.Name)
+	newState.Destination = types.StringValue(recordInfo.Destination)
+	newState.Type = types.StringValue(recordInfo.Type)
+	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
+	newState.Modify = types.BoolValue(recordInfo.Modify)
+	newState.Delete = types.BoolValue(recordInfo.Delete)
 
-	diagnostics = response.State.Set(context, plan)
+	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
 }
 
 func (resource *recordURLResource) Delete(context context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var state recordURLResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getDeleteState[recordURLResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	domain := state.Domain.ValueString()
 	id := state.ID.ValueString()
 
-	err := resource.client.DeleteURLRecord(domain, id)
-
+	err = resource.client.DeleteURLRecord(domain, id)
 	if err != nil {
 		response.Diagnostics.AddError("Error deleting URL record", "Request failed: "+err.Error())
 	}
