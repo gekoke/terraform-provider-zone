@@ -198,19 +198,15 @@ func (resource *recordAResource) Update(context context.Context, request resourc
 }
 
 func (resource *recordAResource) Delete(context context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var state recordAResourceModel
-	diagnostics := request.State.Get(context, &state)
-	response.Diagnostics.Append(diagnostics...)
-
-	if response.Diagnostics.HasError() {
+	state, err := getDeleteState[recordAResourceModel](context, request, response)
+	if err != nil {
 		return
 	}
 
 	domain := state.Domain.ValueString()
 	id := state.ID.ValueString()
 
-	err := resource.client.DeleteARecord(domain, id)
-
+	err = resource.client.DeleteARecord(domain, id)
 	if err != nil {
 		response.Diagnostics.AddError("Error deleting A record", "Request failed: "+err.Error())
 	}
