@@ -4,11 +4,22 @@ on:
   push:
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CACHIX_AUTH_TOKEN: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: Build
+        run: nix build "#terraform-provider-zone" -L
+  build-macos:
+    runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
@@ -22,7 +33,7 @@ jobs:
       - name: Build
         run: nix build "#terraform-provider-zone" -L
   check:
-    needs: build
+    needs: build-linux
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
