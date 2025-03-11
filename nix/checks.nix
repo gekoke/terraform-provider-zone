@@ -32,23 +32,22 @@
             src = ../.;
 
             hooks = commonHooks // {
-              golangci-lint =
-                let
-                  pkg = pkgs.writeShellApplication {
-                    name = "run-golangci-lint";
-                    runtimeInputs = [
-                      pkgs.go
-                      pkgs.golangci-lint
-                    ];
-                    text = "golangci-lint";
-                  };
-                in
-                {
-                  enable = true;
-                  name = "golangci-lint";
-                  entry = toString (lib.getExe pkg);
-                  pass_filenames = false;
-                };
+              golangci-lint = {
+                enable = true;
+                entry =
+                  let
+                    pkg = pkgs.writeShellApplication {
+                      name = "run-golangci-lint";
+                      runtimeInputs = [
+                        pkgs.go
+                        pkgs.golangci-lint
+                      ];
+                      text = "golangci-lint run";
+                    };
+                  in
+                  lib.getExe pkg;
+                pass_filenames = false;
+              };
             };
           };
 
