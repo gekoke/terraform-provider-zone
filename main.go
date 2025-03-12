@@ -14,6 +14,8 @@ import (
 var version string = "@providerVersion@"
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.LUTC)
+
 	var debug bool
 	var printVersion bool
 	flag.BoolVar(&debug, "debug", false, "run the provider with debugging support")
