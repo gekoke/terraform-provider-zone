@@ -11,8 +11,9 @@ _: {
           name = "terraform-provider-zone-shell";
 
           packages = [
-            pkgs.terraform
+            pkgs.golangci-lint
             pkgs.opentofu
+            pkgs.terraform
           ];
 
           shellHook = ''
