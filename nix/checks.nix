@@ -11,7 +11,7 @@
     {
       checks = {
         pre-commit = inputs.nix-pre-commit-hooks.lib.${system}.run {
-          src = ../.;
+          src = lib.cleanSource ../.;
           hooks = import ./git-hooks.nix { inherit lib pkgs; };
         };
 
