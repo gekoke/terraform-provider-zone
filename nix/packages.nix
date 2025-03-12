@@ -5,7 +5,11 @@ _: {
       pkg = pkgs.buildGoModule rec {
         pname = "terraform-provider-zone";
         version = "0.0.0";
-        src = ../.;
+        src = lib.sourceFilesBySuffices ../. [
+          ".go"
+          ".mod"
+          ".sum"
+        ];
         vendorHash = "sha256-7jRPVTP8F4RH4KxvHWeBbEgSrHnPOo9lxfg290QqMzA=";
         patchPhase =
           let
