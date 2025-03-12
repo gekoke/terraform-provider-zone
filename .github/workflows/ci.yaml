@@ -36,4 +36,4 @@ jobs:
           CACHIX_AUTH_TOKEN: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: Build
-        run: nix build "#checks.x86_64-linux.ci" -L
+        run: nix flake check -L
