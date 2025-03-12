@@ -63,6 +63,7 @@
             buildPhase = ''
               HOME=$TMPDIR golangci-lint run
             '';
+            doInstallCheck = false;
           });
 
           ci = pkgs.symlinkJoin {

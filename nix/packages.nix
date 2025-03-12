@@ -2,10 +2,22 @@ _: {
   perSystem =
     { lib, pkgs, ... }:
     let
-      pkg = pkgs.buildGoModule {
-        name = "terraform-provider-zone";
+      pkg = pkgs.buildGoModule rec {
+        pname = "terraform-provider-zone";
+        version = "0.0.0";
         src = ../.;
         vendorHash = "sha256-7jRPVTP8F4RH4KxvHWeBbEgSrHnPOo9lxfg290QqMzA=";
+        patchPhase =
+          let
+            setCorrectVersion = "substituteInPlace ./main.go --subst-var-by providerVersion '${version}'";
+          in
+          ''
+            runHook prePatch
+            ${setCorrectVersion}
+            runHook postPatch
+          '';
+        nativeInstallCheckInputs = [ pkgs.versionCheckHook ];
+        doInstallCheck = true;
       };
       crossCompile =
         os: arch:
@@ -13,14 +25,15 @@ _: {
           old:
           old
           // {
-            ldflags = lib.concatStringsSep " " [
-              "-s -w" # Strip debug info
-              "-extldflags=-static" # Link C libraries statically
-            ];
             env = {
               GOOS = os;
               GOARCH = arch;
             };
+            ldflags = lib.concatStringsSep " " [
+              "-s -w" # Strip debug info
+              "-extldflags=-static" # Link C libraries statically
+            ];
+            doInstallCheck = false;
           }
         );
     in
