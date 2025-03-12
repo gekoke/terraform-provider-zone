@@ -1,0 +1,8 @@
+linters:
+  enable:
+    - exhaustruct
+
+linters-settings:
+  exhaustruct:
+    include:
+      - ".*ResourceModel"

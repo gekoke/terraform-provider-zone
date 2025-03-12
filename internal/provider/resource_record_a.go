@@ -186,14 +186,17 @@ func (resource *recordAResource) Update(context context.Context, request resourc
 		return
 	}
 
-	var newState recordAAAAResourceModel
-	state.ID = types.StringValue(recordInfo.ID)
-	state.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	state.Name = types.StringValue(recordInfo.Name)
-	state.Destination = types.StringValue(recordInfo.Destination.String())
-	state.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	state.Modify = types.BoolValue(recordInfo.Modify)
-	state.Delete = types.BoolValue(recordInfo.Delete)
+	//exhaustruct:enforce
+	var newState = recordAAAAResourceModel{
+		ID:          types.StringValue(recordInfo.ID),
+		LastUpdated: types.StringValue(time.Now().Format(time.RFC850)),
+		Domain:      types.StringValue(domain),
+		Name:        types.StringValue(recordInfo.Name),
+		Destination: types.StringValue(recordInfo.Destination.String()),
+		ResourceURL: types.StringValue(recordInfo.ResourceURL.String()),
+		Modify:      types.BoolValue(recordInfo.Modify),
+		Delete:      types.BoolValue(recordInfo.Delete),
+	}
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)

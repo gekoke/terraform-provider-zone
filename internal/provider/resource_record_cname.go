@@ -102,20 +102,21 @@ func (resource *recordCNAMEResource) Create(context context.Context, request res
 	record := api.CNAMERecord{Name: name, Destination: destination}
 
 	recordInfo, err := resource.client.CreateCNAMERecord(domain, record)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error creating CNAME record", "Request failed: "+err.Error())
 		return
 	}
 
-	var newState recordCNAMEResourceModel
-	newState.ID = types.StringValue(recordInfo.ID)
-	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	newState.Name = types.StringValue(recordInfo.Name)
-	newState.Destination = types.StringValue(recordInfo.Destination)
-	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	newState.Modify = types.BoolValue(recordInfo.Modify)
-	newState.Delete = types.BoolValue(recordInfo.Delete)
+	var newState = recordCNAMEResourceModel{
+		ID:          types.StringValue(recordInfo.ID),
+		LastUpdated: types.StringValue(time.Now().Format(time.RFC850)),
+		Domain:      plan.Domain,
+		Name:        types.StringValue(recordInfo.Name),
+		Destination: types.StringValue(recordInfo.Destination),
+		ResourceURL: types.StringValue(recordInfo.ResourceURL.String()),
+		Modify:      types.BoolValue(recordInfo.Modify),
+		Delete:      types.BoolValue(recordInfo.Delete),
+	}
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
@@ -131,19 +132,21 @@ func (resource *recordCNAMEResource) Read(context context.Context, request resou
 	id := api.Identificator(state.ID.ValueString())
 
 	cnameRecord, err := resource.client.GetCNAMERecord(domain, id)
-
 	if err != nil {
 		response.Diagnostics.AddError("Error reading CNAME record", "Request failed: "+err.Error())
 		return
 	}
 
-	newState := recordCNAMEResourceModel{}
-	newState.ID = types.StringValue(cnameRecord.ID)
-	newState.Name = types.StringValue(cnameRecord.Name)
-	newState.Destination = types.StringValue(cnameRecord.Destination)
-	newState.ResourceURL = types.StringValue(cnameRecord.ResourceURL.String())
-	newState.Modify = types.BoolValue(cnameRecord.Modify)
-	newState.Delete = types.BoolValue(cnameRecord.Delete)
+	var newState = recordCNAMEResourceModel{
+		ID:          types.StringValue(cnameRecord.ID),
+		LastUpdated: types.StringValue(time.Now().Format(time.RFC850)),
+		Domain:      state.Domain,
+		Name:        types.StringValue(cnameRecord.Name),
+		Destination: types.StringValue(cnameRecord.Destination),
+		ResourceURL: types.StringValue(cnameRecord.ResourceURL.String()),
+		Modify:      types.BoolValue(cnameRecord.Modify),
+		Delete:      types.BoolValue(cnameRecord.Delete),
+	}
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
@@ -170,14 +173,16 @@ func (resource *recordCNAMEResource) Update(context context.Context, request res
 		return
 	}
 
-	var newState recordCNAMEResourceModel
-	newState.ID = types.StringValue(recordInfo.ID)
-	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
-	newState.Name = types.StringValue(recordInfo.Name)
-	newState.Destination = types.StringValue(recordInfo.Destination)
-	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	newState.Modify = types.BoolValue(recordInfo.Modify)
-	newState.Delete = types.BoolValue(recordInfo.Delete)
+	var newState = recordCNAMEResourceModel{
+		ID:          types.StringValue(recordInfo.ID),
+		LastUpdated: types.StringValue(time.Now().Format(time.RFC850)),
+		Domain:      plan.Domain,
+		Name:        types.StringValue(recordInfo.Name),
+		Destination: types.StringValue(recordInfo.Destination),
+		ResourceURL: types.StringValue(recordInfo.ResourceURL.String()),
+		Modify:      types.BoolValue(recordInfo.Modify),
+		Delete:      types.BoolValue(recordInfo.Delete),
+	}
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
