@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ self, inputs, ... }:
 {
   perSystem =
     {
@@ -21,7 +21,7 @@
           shellHook =
             let
               pre-commit-local = inputs.nix-pre-commit-hooks.lib.${system}.run {
-                src = ../.;
+                src = self;
 
                 hooks =
                   let

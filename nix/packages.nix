@@ -1,11 +1,12 @@
-_: {
+{ self, ... }:
+{
   perSystem =
     { lib, pkgs, ... }:
     let
       pkg = pkgs.buildGoModule rec {
         pname = "terraform-provider-zone";
         version = "0.0.0";
-        src = lib.sourceFilesBySuffices ../. [
+        src = lib.sourceFilesBySuffices self [
           ".go"
           ".mod"
           ".sum"

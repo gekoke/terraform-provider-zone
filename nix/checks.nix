@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ self, inputs, ... }:
 {
   perSystem =
     {
@@ -11,7 +11,7 @@
     {
       checks = {
         pre-commit = inputs.nix-pre-commit-hooks.lib.${system}.run {
-          src = lib.cleanSource ../.;
+          src = lib.cleanSource self;
           hooks = import ./git-hooks.nix { inherit lib pkgs; };
         };
 
