@@ -12,7 +12,21 @@
       checks = {
         pre-commit = inputs.nix-pre-commit-hooks.lib.${system}.run {
           src = lib.cleanSource self;
-          hooks = import ./git-hooks.nix { inherit lib pkgs; };
+          hooks = {
+            nixfmt-rfc-style.enable = true;
+            deadnix = {
+              enable = true;
+              settings.edit = true;
+            };
+            statix.enable = true;
+            gitleaks = {
+              enable = true;
+              name = "gitleaks";
+              entry = "${lib.getExe pkgs.gitleaks} protect --verbose --redact --staged";
+              pass_filenames = false;
+            };
+            gofmt.enable = true;
+          };
         };
 
         golangci-lint = self'.packages.terraform-provider-zone.overrideAttrs (old: {
