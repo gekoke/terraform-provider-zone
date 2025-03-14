@@ -11,7 +11,7 @@
     {
       checks = {
         pre-commit = inputs.nix-pre-commit-hooks.lib.${system}.run {
-          src = lib.cleanSource self;
+          src = self.outPath;
           hooks = {
             nixfmt-rfc-style.enable = true;
             deadnix = {
