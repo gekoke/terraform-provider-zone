@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/hashicorp/terraform-plugin-framework v1.14.1
-	resty.dev/v3 v3.0.0-beta.2
+	resty.dev/v3 v3.0.0-beta.3
 )
 
 require (
