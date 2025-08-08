@@ -32,6 +32,15 @@ type recordAResourceModel struct {
 	Destination types.String `tfsdk:"destination"`
 }
 
+func newRecordAResourceModel(id, domain, name, destination string) recordAResourceModel {
+	return recordAResourceModel{
+		ID:          types.StringValue(id),
+		Domain:      types.StringValue(domain),
+		Name:        types.StringValue(name),
+		Destination: types.StringValue(destination),
+	}
+}
+
 func (*recordAResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = request.ProviderTypeName + "_record_a"
 }
@@ -99,11 +108,12 @@ func (resource *recordAResource) Create(context context.Context, request resourc
 		return
 	}
 
-	var newState recordAResourceModel
-	newState.ID = types.StringValue(recordInfo.ID)
-	newState.Domain = plan.Domain
-	newState.Name = types.StringValue(recordInfo.Name)
-	newState.Destination = types.StringValue(recordInfo.Destination.String())
+	newState := newRecordAResourceModel(
+		recordInfo.ID,
+		domain,
+		recordInfo.Name,
+		recordInfo.Destination.String(),
+	)
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
@@ -124,11 +134,12 @@ func (resource *recordAResource) Read(context context.Context, request resource.
 		return
 	}
 
-	var newState recordAResourceModel
-	newState.ID = types.StringValue(recordInfo.ID)
-	newState.Domain = state.Domain
-	newState.Name = types.StringValue(recordInfo.Name)
-	newState.Destination = types.StringValue(recordInfo.Destination.String())
+	newState := newRecordAResourceModel(
+		recordInfo.ID,
+		state.Domain.ValueString(),
+		recordInfo.Name,
+		recordInfo.Destination.String(),
+	)
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
@@ -164,11 +175,12 @@ func (resource *recordAResource) Update(context context.Context, request resourc
 		return
 	}
 
-	var newState recordAResourceModel
-	newState.ID = types.StringValue(recordInfo.ID)
-	newState.Domain = plan.Domain
-	newState.Name = types.StringValue(recordInfo.Name)
-	newState.Destination = types.StringValue(recordInfo.Destination.String())
+	newState := newRecordAResourceModel(
+		recordInfo.ID,
+		domain,
+		recordInfo.Name,
+		recordInfo.Destination.String(),
+	)
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
