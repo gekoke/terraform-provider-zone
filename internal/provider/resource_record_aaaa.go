@@ -119,6 +119,7 @@ func (resource *recordAAAAResource) Create(context context.Context, request reso
 	var newState recordAAAAResourceModel
 	newState.ID = types.StringValue(recordInfo.ID)
 	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+	newState.Domain = plan.Domain
 	newState.Name = types.StringValue(recordInfo.Name)
 	newState.Destination = types.StringValue(recordInfo.Destination.StringExpanded())
 	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
