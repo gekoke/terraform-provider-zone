@@ -94,10 +94,5 @@ func (zoneProvider) DataSources(_ context.Context) []func() datasource.DataSourc
 func (zoneProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewRecordAResource,
-		NewRecordAAAAResource,
-		NewRecordCNAMEResource,
-		NewRecordMXResource,
-		NewRecordTXTResource,
-		NewRecordURLResource,
 	}
 }
