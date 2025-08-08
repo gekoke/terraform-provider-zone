@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"net/netip"
-	"time"
 
 	"github.com/gekoke/terraform-provider-zone/internal/api"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -28,13 +27,9 @@ type recordAResource struct {
 
 type recordAResourceModel struct {
 	ID          types.String `tfsdk:"id"`
-	LastUpdated types.String `tfsdk:"last_updated"`
 	Domain      types.String `tfsdk:"domain"`
 	Name        types.String `tfsdk:"name"`
 	Destination types.String `tfsdk:"destination"`
-	ResourceURL types.String `tfsdk:"resource_url"`
-	Modify      types.Bool   `tfsdk:"modify"`
-	Delete      types.Bool   `tfsdk:"delete"`
 }
 
 func (*recordAResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -47,9 +42,6 @@ func (*recordAResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"last_updated": schema.StringAttribute{
-				Computed: true,
-			},
 			"domain": schema.StringAttribute{
 				Required: true,
 			},
@@ -58,15 +50,6 @@ func (*recordAResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"destination": schema.StringAttribute{
 				Required: true,
-			},
-			"resource_url": schema.StringAttribute{
-				Computed: true,
-			},
-			"delete": schema.BoolAttribute{
-				Computed: true,
-			},
-			"modify": schema.BoolAttribute{
-				Computed: true,
 			},
 		},
 	}
@@ -118,13 +101,9 @@ func (resource *recordAResource) Create(context context.Context, request resourc
 
 	var newState recordAResourceModel
 	newState.ID = types.StringValue(recordInfo.ID)
-	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 	newState.Domain = plan.Domain
 	newState.Name = types.StringValue(recordInfo.Name)
 	newState.Destination = types.StringValue(recordInfo.Destination.String())
-	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	newState.Modify = types.BoolValue(recordInfo.Modify)
-	newState.Delete = types.BoolValue(recordInfo.Delete)
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
@@ -147,11 +126,9 @@ func (resource *recordAResource) Read(context context.Context, request resource.
 
 	var newState recordAResourceModel
 	newState.ID = types.StringValue(recordInfo.ID)
+	newState.Domain = state.Domain
 	newState.Name = types.StringValue(recordInfo.Name)
 	newState.Destination = types.StringValue(recordInfo.Destination.String())
-	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	newState.Modify = types.BoolValue(recordInfo.Modify)
-	newState.Delete = types.BoolValue(recordInfo.Delete)
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
@@ -187,15 +164,11 @@ func (resource *recordAResource) Update(context context.Context, request resourc
 		return
 	}
 
-	var newState recordAAAAResourceModel
+	var newState recordAResourceModel
 	newState.ID = types.StringValue(recordInfo.ID)
-	newState.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 	newState.Domain = plan.Domain
 	newState.Name = types.StringValue(recordInfo.Name)
 	newState.Destination = types.StringValue(recordInfo.Destination.String())
-	newState.ResourceURL = types.StringValue(recordInfo.ResourceURL.String())
-	newState.Modify = types.BoolValue(recordInfo.Modify)
-	newState.Delete = types.BoolValue(recordInfo.Delete)
 
 	diagnostics := response.State.Set(context, &newState)
 	response.Diagnostics.Append(diagnostics...)
